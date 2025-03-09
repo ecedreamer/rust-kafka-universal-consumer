@@ -32,8 +32,8 @@ fn create_consumer(kafka_config: &KafkaConfig) -> Consumer {
                 return consumer;
             },
             Err(e) => {
-                print!("Failed to create Kafka consumer: {}", e);
-                print!("Retrying in {:?}...", RETRY_DELAY);
+                tracing::warn!("Failed to create Kafka consumer: {}", e);
+                tracing::info!("Retrying in {:?}...", RETRY_DELAY);
                 std::thread::sleep(RETRY_DELAY);
             }
         }
@@ -41,7 +41,7 @@ fn create_consumer(kafka_config: &KafkaConfig) -> Consumer {
 }
 
 fn kafka_consumer(kafka_config: KafkaConfig) {
-    println!(
+    tracing::info!(
         "Starting kafka consumer for broker: {:?} with Thread ID: {:?}",
         kafka_config, std::thread::current().id()
     );
@@ -49,7 +49,7 @@ fn kafka_consumer(kafka_config: KafkaConfig) {
     loop {
         for ms in consumer.poll().unwrap().iter() {
             for m in ms.messages() {
-                println!("{:?}", String::from_utf8(m.value.to_vec()).unwrap());
+                tracing::info!("{:?}", String::from_utf8(m.value.to_vec()).unwrap());
             }
             let _ = consumer.consume_messageset(ms);
         }
@@ -60,7 +60,9 @@ fn kafka_consumer(kafka_config: KafkaConfig) {
 
 #[tokio::main]
 async fn main() {
-    println!("Starting kafka consumer!");
+    tracing_subscriber::fmt::init();
+
+    tracing::info!("Starting kafka consumer!");
 
     let config_path = "config.json";
     let config = load_config(config_path).await;

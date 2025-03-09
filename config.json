@@ -21,7 +21,15 @@
                 "127.0.0.1:29093"
             ],
             "group_id": "topic2-group",
-            "topic": "test-topic2",
+            "topic": "k2t2",
+            "partitions": [0]
+        },
+        {
+            "bootstrap_servers": [
+                "127.0.0.1:29094"
+            ],
+            "group_id": "topic2-group",
+            "topic": "k2t2",
             "partitions": [0]
         }
     ],

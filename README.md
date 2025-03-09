@@ -2,10 +2,11 @@
 
 
 ## Feature/Acceptance Criteria
-1. Configuration based, configuration changes, restart needed. 
-2. Multiple partitions of multiple topics of multiple brokers.
-3. Try re-connecting every X seconds if the broker is not available or gets down in the middle. 
-4. 
+1. Configuration based, configuration changes, restart needed. ✅
+2. Multiple partitions of multiple topics of multiple brokers. ✅
+3. Try re-connecting every X seconds if the broker is not available. ✅
+4. Try re-connecting every X seconds if failed to make consumer. ✅
+5. Try re-connecting every X seconds if the broker goes down available.❌
 
 ### Commands
 #### Kafka Console Producer
