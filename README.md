@@ -1,4 +1,4 @@
-## Kafka Consumer
+## Rust Universal Kafka Consumer
 A kafka consumer which can consume defined topic partitions of multiple kafka brokers in a multithreaded manner. 
 This is just an educational project which may have errors. It is written in Rust Programming Language. 
 
