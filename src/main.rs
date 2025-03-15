@@ -7,7 +7,9 @@ use tokio::fs::File;
 use tokio::io::AsyncReadExt;
 use crate::config::{AppConfig, KafkaConfig};
 
+
 const RETRY_DELAY: Duration = Duration::from_secs(10);
+
 
 async fn load_config(config_path: &str) -> AppConfig {
     let mut file = File::open(config_path).await.expect("config.json not found");
@@ -18,7 +20,7 @@ async fn load_config(config_path: &str) -> AppConfig {
     config
 }
 
-fn create_consumer(kafka_config: &KafkaConfig) -> Consumer {
+async fn create_consumer(kafka_config: &KafkaConfig) -> Consumer {
     loop {
         let consumer_result = Consumer::from_hosts(kafka_config.bootstrap_servers.clone())
             .with_fallback_offset(FetchOffset::Earliest)
@@ -35,25 +37,29 @@ fn create_consumer(kafka_config: &KafkaConfig) -> Consumer {
                 tracing::warn!("On broker: {:?}", kafka_config);
                 tracing::warn!("Failed to create Kafka consumer: {}", e);
                 tracing::info!("Retrying in {:?}...", RETRY_DELAY);
-                std::thread::sleep(RETRY_DELAY);
+                tokio::time::sleep(RETRY_DELAY).await;
             }
         }
     }
 }
 
-fn kafka_consumer(kafka_config: KafkaConfig) {
+async fn kafka_consumer(kafka_config: KafkaConfig) {
     tracing::info!(
         "Starting kafka consumer for broker: {:?} with Thread ID: {:?}",
         kafka_config, std::thread::current().id()
     );
     loop {
-        let mut consumer = create_consumer(&kafka_config);
+        let mut consumer = create_consumer(&kafka_config).await;
         loop {
             match consumer.poll() {
                 Ok(messages) => {
                     for ms in messages.iter() {
                         for m in ms.messages() {
-                            tracing::info!("{:?}", String::from_utf8(m.value.to_vec()).unwrap());
+                            tracing::info!(
+                                "broker: {:?}\n{:?}\n",
+                                &kafka_config.bootstrap_servers,
+                                String::from_utf8(m.value.to_vec()).unwrap()
+                            );
                         }
                         let _ = consumer.consume_messageset(ms);
                     }
@@ -80,11 +86,11 @@ async fn main() {
 
     let mut handles = Vec::new();
     for k_config in config.kafka_configs {
-        let handle = std::thread::spawn(move || kafka_consumer(k_config));
+        let handle = tokio::spawn(kafka_consumer(k_config));
         handles.push(handle);
     }
 
     for handle in handles {
-        handle.join().unwrap();
+        handle.await.unwrap();
     }
 }

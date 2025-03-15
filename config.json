@@ -29,7 +29,7 @@
                 "127.0.0.1:29094"
             ],
             "group_id": "topic2-group",
-            "topic": "k2t2",
+            "topic": "k3t3",
             "partitions": [0]
         }
     ],
