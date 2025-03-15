@@ -2,7 +2,6 @@ import json
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Dict, Any
-import threading
 
 from kafka import KafkaProducer
 
@@ -32,7 +31,7 @@ def main() -> None:
     print(config)
     futures = []
     with ThreadPoolExecutor(max_workers=8) as executor:
-        for k_config in config.get("topic_info"):
+        for k_config in config.get("kafka_configs"):
             future = executor.submit(produce_message, k_config)
             futures.append(future)
 

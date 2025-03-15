@@ -7,7 +7,7 @@ This is just an educational project which may have errors. It is written in Rust
 2. Multiple partitions of multiple topics of multiple brokers. ✅
 3. Try re-connecting every X seconds if the broker is not available. ✅
 4. Try re-connecting every X seconds if failed to make consumer. ✅
-5. Try re-connecting every X seconds if the broker goes down available.❌
+5. Try re-connecting every X seconds if the broker goes down available. ✅
 
 ### Usage commands
 #### 1. Run kafka brokers

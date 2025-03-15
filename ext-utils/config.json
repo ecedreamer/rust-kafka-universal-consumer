@@ -1,5 +1,5 @@
 {
-  "topic_info": [
+  "kafka_configs": [
     {
       "broker": "localhost:29092",
       "topic": "test-topic"

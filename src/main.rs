@@ -20,7 +20,7 @@ async fn load_config(config_path: &str) -> AppConfig {
 
 fn create_consumer(kafka_config: &KafkaConfig) -> Consumer {
     loop {
-        let consumer_result =  Consumer::from_hosts(kafka_config.bootstrap_servers.clone())
+        let consumer_result = Consumer::from_hosts(kafka_config.bootstrap_servers.clone())
             .with_fallback_offset(FetchOffset::Earliest)
             .with_offset_storage(Some(GroupOffsetStorage::Kafka))
             .with_group(kafka_config.group_id.clone())
@@ -30,7 +30,7 @@ fn create_consumer(kafka_config: &KafkaConfig) -> Consumer {
         match consumer_result {
             Ok(consumer) => {
                 return consumer;
-            },
+            }
             Err(e) => {
                 tracing::warn!("On broker: {:?}", kafka_config);
                 tracing::warn!("Failed to create Kafka consumer: {}", e);
@@ -46,15 +46,25 @@ fn kafka_consumer(kafka_config: KafkaConfig) {
         "Starting kafka consumer for broker: {:?} with Thread ID: {:?}",
         kafka_config, std::thread::current().id()
     );
-    let mut consumer = create_consumer(&kafka_config);
     loop {
-        for ms in consumer.poll().unwrap().iter() {
-            for m in ms.messages() {
-                tracing::info!("{:?}", String::from_utf8(m.value.to_vec()).unwrap());
+        let mut consumer = create_consumer(&kafka_config);
+        loop {
+            match consumer.poll() {
+                Ok(messages) => {
+                    for ms in messages.iter() {
+                        for m in ms.messages() {
+                            tracing::info!("{:?}", String::from_utf8(m.value.to_vec()).unwrap());
+                        }
+                        let _ = consumer.consume_messageset(ms);
+                    }
+                    consumer.commit_consumed().unwrap();
+                }
+                Err(e) => {
+                    tracing::warn!("Failed to poll consumer: {}", e);
+                    break;
+                }
             }
-            let _ = consumer.consume_messageset(ms);
         }
-        consumer.commit_consumed().unwrap();
     }
 }
 
@@ -77,5 +87,4 @@ async fn main() {
     for handle in handles {
         handle.join().unwrap();
     }
-
 }
