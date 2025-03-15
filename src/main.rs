@@ -32,6 +32,7 @@ fn create_consumer(kafka_config: &KafkaConfig) -> Consumer {
                 return consumer;
             },
             Err(e) => {
+                tracing::warn!("On broker: {:?}", kafka_config);
                 tracing::warn!("Failed to create Kafka consumer: {}", e);
                 tracing::info!("Retrying in {:?}...", RETRY_DELAY);
                 std::thread::sleep(RETRY_DELAY);
@@ -76,4 +77,5 @@ async fn main() {
     for handle in handles {
         handle.join().unwrap();
     }
+
 }

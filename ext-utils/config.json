@@ -1,0 +1,16 @@
+{
+  "topic_info": [
+    {
+      "broker": "localhost:29092",
+      "topic": "test-topic"
+    },
+    {
+      "broker": "localhost:29092",
+      "topic": "test-topic2"
+    },
+    {
+      "broker": "localhost:29093",
+      "topic": "k2t2"
+    }
+  ]
+}

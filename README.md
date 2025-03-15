@@ -22,11 +22,16 @@ This will run two kafka instances namely kafka1 and kafka2 on 29092 and 29093 po
 $ docker compose exec kafka1 kafka-topics --create --topic test-topic --bootstrap-server localhost:9092 --partitions 1 --replication-factor 1
 ```
 Create different topics on different brokers and modify config.json accordingly. 
-#### 3. Run different Kafka Console Producer to produce messages
+#### 3. Produce messages to the topics
 
 ```shell
-docker compose exec kafka1 kafka-console-producer --broker-list localhost:9092 --topic test-topic
+$ python3 -m venv venv
+$ source venv/bin/activate
+$ pip install kafka-python
+$ python ext-utils/universal_producer.py
 ```
+There is a config.json file inside the ext-utils which is used by the above Python script.
+
 
 ### Configuration Sample
 ```json
