@@ -1,13 +1,16 @@
 mod config;
 
-use std::time::Duration;
+use std::time::{Duration, Instant};
 use kafka::client::{FetchOffset, GroupOffsetStorage};
 use kafka::consumer::Consumer;
 use std::fs::File;
 use std::io::Read;
+use std::sync::mpsc;
+
 use crate::config::{AppConfig, KafkaConfig};
 
 const RETRY_DELAY: Duration = Duration::from_secs(10);
+const BENCHMARK_DELAY: u64 = 5;
 
 fn load_config(config_path: &str) -> AppConfig {
     let mut file = File::open(config_path).expect("config.json not found");
@@ -41,7 +44,7 @@ fn create_consumer(kafka_config: &KafkaConfig) -> Consumer {
     }
 }
 
-fn kafka_consumer(kafka_config: KafkaConfig) {
+fn kafka_consumer(kafka_config: KafkaConfig, tx: mpsc::Sender<String>) {
     tracing::info!(
         "Starting kafka consumer for broker: {:?} with Thread ID: {:?}",
         kafka_config, std::thread::current().id()
@@ -53,7 +56,8 @@ fn kafka_consumer(kafka_config: KafkaConfig) {
                 Ok(messages) => {
                     for ms in messages.iter() {
                         for m in ms.messages() {
-                            tracing::info!("{:?}", String::from_utf8(m.value.to_vec()).unwrap());
+                            let message =  String::from_utf8(m.value.to_vec()).unwrap();
+                            tx.send(message).unwrap();
                         }
                         let _ = consumer.consume_messageset(ms);
                     }
@@ -69,6 +73,27 @@ fn kafka_consumer(kafka_config: KafkaConfig) {
 }
 
 
+fn process_events(rx: mpsc::Receiver<String>) {
+    tracing::info!("Processing events...");
+
+    let mut message_count = 0;
+    let mut start_time = Instant::now();
+
+    loop {
+        let received = rx.recv().unwrap();
+        message_count += 1;
+
+        if start_time.elapsed() >= Duration::from_secs(BENCHMARK_DELAY) {
+            let eps = message_count / BENCHMARK_DELAY;
+            tracing::info!("EPS: {}", eps);
+            message_count = 0;
+            start_time = Instant::now();
+        }
+    }
+}
+
+
+
 fn main() {
     tracing_subscriber::fmt::init();
 
@@ -77,11 +102,18 @@ fn main() {
     let config_path = "config.json";
     let config = load_config(config_path);
 
+    let (tx, rx) = mpsc::channel();
+
     let mut handles = Vec::new();
     for k_config in config.kafka_configs {
-        let handle = std::thread::spawn(move || kafka_consumer(k_config));
+        let cloned_tx = tx.clone();
+        let handle = std::thread::spawn(move || kafka_consumer(k_config, cloned_tx));
         handles.push(handle);
     }
+
+    let process_event_handle = std::thread::spawn(move || process_events(rx));
+    handles.push(process_event_handle);
+
 
     for handle in handles {
         handle.join().unwrap();
