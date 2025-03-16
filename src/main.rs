@@ -3,16 +3,16 @@ mod config;
 use std::time::Duration;
 use kafka::client::{FetchOffset, GroupOffsetStorage};
 use kafka::consumer::Consumer;
-use tokio::fs::File;
-use tokio::io::AsyncReadExt;
+use std::fs::File;
+use std::io::Read;
 use crate::config::{AppConfig, KafkaConfig};
 
 const RETRY_DELAY: Duration = Duration::from_secs(10);
 
-async fn load_config(config_path: &str) -> AppConfig {
-    let mut file = File::open(config_path).await.expect("config.json not found");
+fn load_config(config_path: &str) -> AppConfig {
+    let mut file = File::open(config_path).expect("config.json not found");
     let mut contents = String::new();
-    file.read_to_string(&mut contents).await.expect("config.json not found");
+    file.read_to_string(&mut contents).expect("config.json not found");
     let config: AppConfig = serde_json::from_str(&contents).expect("Failed to parse config.json");
 
     config
@@ -69,14 +69,13 @@ fn kafka_consumer(kafka_config: KafkaConfig) {
 }
 
 
-#[tokio::main]
-async fn main() {
+fn main() {
     tracing_subscriber::fmt::init();
 
     tracing::info!("Starting kafka consumer!");
 
     let config_path = "config.json";
-    let config = load_config(config_path).await;
+    let config = load_config(config_path);
 
     let mut handles = Vec::new();
     for k_config in config.kafka_configs {

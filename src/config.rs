@@ -7,7 +7,6 @@ pub struct KafkaConfig {
     pub group_id: String,
     pub topic: String,
     pub partitions: Vec<i32>,
-    pub retry: Option<bool>,
 }
 
 
