@@ -80,7 +80,7 @@ fn process_events(rx: mpsc::Receiver<String>) {
     let mut start_time = Instant::now();
 
     loop {
-        let received = rx.recv().unwrap();
+        let _received = rx.recv().unwrap();
         message_count += 1;
 
         if start_time.elapsed() >= Duration::from_secs(BENCHMARK_DELAY) {

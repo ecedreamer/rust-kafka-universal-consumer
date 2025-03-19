@@ -3,3 +3,6 @@ venv/
 .idea/
 .code/
 *.pyc
+ext-utils/concurrent_write.py
+ext-utils/ks_01.py
+ext-utils/tasks.json
