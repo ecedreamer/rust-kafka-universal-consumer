@@ -1,7 +1,7 @@
 mod handlers;
 
 use axum::Router;
-use axum::routing::get;
+use axum::routing::{get, post};
 
 
 
@@ -12,7 +12,9 @@ async fn main() {
     tracing::info!("Starting the configuration server on http://0.0.0.0:8080");
 
     let app = Router::new()
-        .route("/", get(handlers::home_handler));
+        .route("/", get(handlers::home_handler))
+        .route("/source/list", get(handlers::kafka_source_list_handler))
+        .route("/source/add", post(handlers::kafka_source_add_handler));
 
     let listener = tokio::net::TcpListener::bind("0.0.0.0:8080").await.unwrap();
 
